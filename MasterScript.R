@@ -102,5 +102,13 @@ summary(final.pred)
 
 #we see an increase in R^2, which is the goodness of fit of about 13%.
 
+#trying a log-log model 
+
+loglinear.pred <- lm(log(revenue) ~ log(stout) + log(adstock.tv) + log(ooh_S) + log(print_S) + log(adstock.facebook) + log(adstock.search), data = data)
+summary(loglinear.pred)
+
+#R^2 goes up to 70% from 56% | A 14% increase. 1% increase in FB coefficient will result in a 4.3% increase in sales
+
+
 
 
