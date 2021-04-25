@@ -17,7 +17,7 @@ library(tidyr)
 str(data)
 
 
-#seasonality: We create a time series model that shows residuals from the mean. Then, we use monthly seasonal averages as a variable.
+#seasonality: We create a time series model. Then, we use monthly trend as dummy variables.
 
 forcast <- forcast %>%
   select(ds,y) 
@@ -78,12 +78,20 @@ View(data)
 
 
 
-#ADSTOCK: Carryover effect. An ad that was seen last week could have effects on sales this week.
+
+#ADSTOCK: geometric vs delayed vs S hill
+
+#includes hill function
+adstockTransform <- function(x){
+  stats::filter( 1/(1+exp(-2*x)), 0.25, method = "recursive")
+}
 
 
-adstock.tv <- stats::filter(data$tv_S, filter = .3, method = "recursive")
-adstock.facebook <- stats::filter(data$facebook_S, filter = .3, method = "recursive")
-adstock.search <- stats::filter(data$search_S, filter = .3, method = "recursive")
+
+
+
+
+
 
 #model: Create the linear model that adds the baseline, the adstock, the seasonality, and the variables.
 
@@ -100,15 +108,23 @@ summary(seasonal.pred)
 final.pred <- lm(revenue ~ stout + adstock.tv + ooh_S + print_S + adstock.facebook + adstock.search, data = data)
 summary(final.pred)
 
+plot(final.pred)
+
 #we see an increase in R^2, which is the goodness of fit of about 13%.
 
 #trying a log-log model 
 
-loglinear.pred <- lm(log(revenue) ~ log(stout) + log(adstock.tv) + log(ooh_S) + log(print_S) + log(adstock.facebook) + log(adstock.search), data = data)
+loglinear.pred <- lm(log(revenue) ~ log(stout) + log(adstockTranform(tv_S)) + log(ooh_S) + log(print_S) + log(adstockTranform(facebook_S)) + log(adstockTransform(search_S)), data = data)
 summary(loglinear.pred)
+plot(loglinear.pred)
 
 #R^2 goes up to 70% from 56% | A 14% increase. 1% increase in FB coefficient will result in a 4.3% increase in sales
 
 
-
+#PLOTTING DATA
+library(ggplot2)
+ 
+scatterPlotPlusFit <- ggplot(data, aes(x = adstock.tv, y = revenue)) +
+  geom_point() +
+  geom_smooth()
 
